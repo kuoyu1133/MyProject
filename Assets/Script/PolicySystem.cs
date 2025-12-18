@@ -2,25 +2,35 @@
 
 public class PolicySystem : MonoBehaviour
 {
-    // 生育政策：只負責當下啟動時的效果（例如立即出生）
-    public void ApplyPopulationPolicy(Country country)
+    private const int MaxPopulation = 100000000;
+
+    public int ApplyPopulationPolicy(Country country)
     {
-        float rand = Random.Range(country.PopulationGrowthRate, 2 * country.PopulationGrowthRate);
-        int popIncrease = Mathf.CeilToInt(country.Population * rand / 100f);
+        int oldPop = country.Population;
+        // 改為基於城市數量的固定增長，避免複利爆炸
+        int popIncrease = country.City * 200;
 
-        country.Population += popIncrease;
+        long nextPop = (long)country.Population + popIncrease;
+        country.Population = (nextPop > MaxPopulation || nextPop < 0) ? MaxPopulation : (int)nextPop;
 
-        Debug.Log($"{country.CountryName} 生育政策啟動，本回合人口增加 {popIncrease}");
+        return country.Population - oldPop;
     }
 
-    // 軍事政策：只負責啟動瞬間效果
-    public void ApplyMilitaryPolicy(Country country)
+    public int ApplyMilitaryPolicy(Country country)
     {
-        country.Population += Mathf.CeilToInt(country.Population * (country.PopulationGrowthRate - 0.15f));
-        country.MilPower += country.Population * 0.015f;
-        country.Population = (int)(country.Population * 0.985f);
-        country.morale.ModifyMorale(-50);
+        int oldPop = country.Population;
+        float oldMil = country.MilPower; // 新增：記錄舊軍力
 
-        Debug.Log($"{country.CountryName} 軍事政策啟動，士兵戰力與民心值變化");
+        // 軍事政策邏輯
+        float gains = country.Population * 0.001f; // 計算增量
+        country.MilPower += gains;
+
+        // ✅ 新增除錯訊息
+        Debug.Log($"<color=cyan>[軍事政策]</color> {country.CountryName}: 軍力 {oldMil:F1} -> {country.MilPower:F1} (增量: +{gains:F1}, 消耗人口: {Mathf.CeilToInt(country.Population * 0.01f)})");
+
+        country.Population = Mathf.CeilToInt(country.Population * 0.99f); // 徵兵消耗人口
+        country.morale.ModifyMorale(-5);
+
+        return country.Population - oldPop;
     }
 }

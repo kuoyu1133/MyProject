@@ -8,7 +8,7 @@ using UnityEngine.UI;
 public class TradeSystem : MonoBehaviour
 {
     public List<CountryStateManager> allCountries; // 所有國家
-    public GameObject tradeUIPanel; // 提供一個是否交易的UI
+    //public GameObject tradeUIPanel; // 提供一個是否交易的UI
     public TMP_Text tradeUIText;
     public Button acceptButton;
     public Button rejectButton;
@@ -29,16 +29,16 @@ public class TradeSystem : MonoBehaviour
     void Start()
     {
         Debug.Log("[TradeSystem] Start 被呼叫");
-        tradeUIPanel.SetActive(false);
+        //tradeUIPanel.SetActive(false);
 
-        acceptButton.onClick.AddListener(() => //偵測到同意交易按鈕被點擊，執行下列操作
+        /*acceptButton.onClick.AddListener(() => //偵測到同意交易按鈕被點擊，執行下列操作
         {
             Debug.Log("[TradeSystem] acceptButton 被點擊");
             if (currentRequest != null)
             {
                 currentRequest.accepted = true;
                 ExecuteTrade(currentRequest);
-                tradeUIPanel.SetActive(false);
+                //tradeUIPanel.SetActive(false);
             }
         });
 
@@ -49,9 +49,9 @@ public class TradeSystem : MonoBehaviour
             {
                 currentRequest.accepted = false;
                 ExecuteTrade(currentRequest);
-                tradeUIPanel.SetActive(false);
+                //tradeUIPanel.SetActive(false);
             }
-        });
+        });*/
     }
     
     public void DailyTrade(CountryStateManager playerCountry)
@@ -148,8 +148,8 @@ public class TradeSystem : MonoBehaviour
     {
         if (!request.isPlayerRequest) return;
         Debug.Log($"[TradeSystem] ShowTradeUI() 被呼叫: {request.requester.CountryName} 要求 {request.amount} {request.resourceType}");
-        tradeUIPanel.SetActive(true);
-        tradeUIText.text = $"{request.requester.CountryName} 向 {request.provider.CountryName} 請求交易 {request.amount} {request.resourceType}。\n是否同意交易？";
+        //tradeUIPanel.SetActive(true);
+        //tradeUIText.text = $"{request.requester.CountryName} 向 {request.provider.CountryName} 請求交易 {request.amount} {request.resourceType}。\n是否同意交易？";
     }
 
     public int GetResourceNeed(CountryStateManager country, string resource)
@@ -265,8 +265,8 @@ public class TradeSystem : MonoBehaviour
         }
         else
         {
-            request.requester.trust.ModifyTrust(providerData.CountryName ,- 5);
-            request.provider.trust.ModifyTrust(requesterData.CountryName ,- 5);
+            request.requester.trust.ModifyTrust(providerData.CountryName ,- 15);
+            request.provider.trust.ModifyTrust(requesterData.CountryName ,- 15);
             Debug.Log($"{requesterData.CountryName} 從 {providerData.CountryName} 提出交易被拒絕，雙方信賴-5");
         }
     }

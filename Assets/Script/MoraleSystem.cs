@@ -14,6 +14,16 @@ public class MoraleSystem
     }
     public bool IsDefeated => MoraleValue <= 0;//判斷遊戲是否失敗
 
+    public bool CheckDefeated(Country countryData)
+    {
+        // 判定 1: 民心歸零
+        if (MoraleValue <= 0) return true;
+
+        // 判定 2: 城市被完全佔領 (根據您的需求)
+        if (countryData.City <= 0) return true;
+
+        return false;
+    }
     public void SetMorale(int morale)
     {
         MoraleValue = Mathf.Clamp(morale, Min, Max);

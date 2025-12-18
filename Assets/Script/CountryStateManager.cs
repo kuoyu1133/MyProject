@@ -15,7 +15,6 @@ public class CountryStateManager : MonoBehaviour
     public MoraleSystem moraleSystem;
 
     public int Population;
-    public int Military;
     public float MilPower;
     public int Defense;
 
@@ -25,46 +24,50 @@ public class CountryStateManager : MonoBehaviour
     public int Wood;
     public float PopulationGrowthRate;//人口成長率
 
-    private void Awake()//初始呼叫函式
-    {
-        announcement = gameObject.AddComponent<AnnouncementSystem>();//賦予遊戲物件元素
-        trust = gameObject.AddComponent<TrustSystem>();
-        //morale = gameObject.AddComponent<MoraleSystem>();
-        policy = gameObject.AddComponent<PolicySystem>();
-        resource = gameObject.AddComponent<ResourceSystem>();
-        occupation = gameObject.AddComponent<OccupationSystem>();
-    }
-
-
     public void DailyUpdate()
     {
-        foreach (Country country in resource.countries)
+
+        Country selfData = resource.countries.Find(c => c.CountryName == CountryName);
+
+        if (selfData == null) return;
+
+        resource.UpdateDay(selfData);
+
+        if (selfData.Iron < selfData.Population * 0.02f)
+            selfData.morale.ModifyMorale(-1);
+        else
+            selfData.morale.ModifyMorale(2);
+
+        if (selfData.Wood < selfData.Population * 0.03f)
+            selfData.morale.ModifyMorale(-2);
+        else
+            selfData.morale.ModifyMorale(4);
+
+        if (selfData.Food < selfData.Population * 0.05f)
+            selfData.morale.ModifyMorale(-3);
+        else
+            selfData.morale.ModifyMorale(5);
+
+        if (selfData.morale.CheckDefeated(selfData))
         {
-            resource.UpdateDay(country);
-
-            if (country.Food < country.Population * 0.05f)
-                morale.ModifyMorale(-1);
-            else
-                morale.ModifyMorale(5);
+            Debug.Log($"{CountryName} 已滅亡（因民心歸零）！");
         }
-
-        if (morale.IsDefeated)
-            Debug.Log($"{CountryName} 因民心歸零而滅亡！");
-
+        if (selfData.City == 0)
+        {
+            Debug.Log($"{CountryName} 已滅亡（因城市均被佔領）！");
+        }
     }
     public CountryStateManager GetCountryByName(string name)
     {
-        foreach (var country in resource.countries)
+        CountryStateManager[] allManagers = FindObjectsByType<CountryStateManager>(FindObjectsSortMode.None);
+        foreach (var manager in allManagers)
         {
-            if (country.CountryName == name)
-                return this; // 返回對應的 CountryStateManager
+            if (manager.CountryName == name)
+            {
+                return manager;
+            }
         }
         return null;
     }
 
-    /*public void AIUpdate()
-    {
-        // AI 行為: 自動產生政策或交易
-        DailyUpdate();
-    }*/
 }

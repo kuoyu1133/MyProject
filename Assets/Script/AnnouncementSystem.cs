@@ -31,8 +31,12 @@ public class AnnouncementSystem : MonoBehaviour
         Debug.Log($"{DisasterCountry.CountryName} 發生天災");
 
         // 天災效果
-        DisasterCountry.DailyFoodProd -= Mathf.RoundToInt(target.Food * 0.7f);
-        DisasterCountry.MilPower -= Mathf.RoundToInt(target.MilPower * 0.5f);
+        DisasterCountry.DailyFoodProd -= Mathf.RoundToInt(DisasterCountry.Food * 0.7f);
+        float oldMil = DisasterCountry.MilPower;
+        DisasterCountry.MilPower -= Mathf.RoundToInt(DisasterCountry.MilPower * 0.5f); // 這裡 target.MilPower 可能是舊值
+
+        // ✅ 新增除錯訊息
+        Debug.Log($"<color=orange>[天災事件]</color> {DisasterCountry.CountryName} 軍力減半: {oldMil} -> {DisasterCountry.MilPower}");
 
         AnnounceDisaster(target);
         ProcessSupport(target,player, true, true, 30, 15, -5); // 糧食30% 信賴+15 / 人力 信賴+10 / 拒絕-5
@@ -44,9 +48,12 @@ public class AnnouncementSystem : MonoBehaviour
 
         Debug.Log($"{DiseaseCountry.CountryName} 發生疾病");
 
-        DiseaseCountry.DailyFoodProd = Mathf.RoundToInt(target.Food * 0.5f); // 糧食減半
-        DiseaseCountry.MilPower = Mathf.RoundToInt(target.Military * 0.75f); // 軍力減少25%
+        DiseaseCountry.DailyFoodProd = Mathf.RoundToInt(DiseaseCountry.Food * 0.5f); // 糧食減半
+        float oldMil = DiseaseCountry.MilPower;
+        DiseaseCountry.MilPower = Mathf.RoundToInt(DiseaseCountry.MilPower * 0.75f);
 
+        // ✅ 新增除錯訊息
+        Debug.Log($"<color=orange>[疾病事件]</color> {DiseaseCountry.CountryName} 軍力減少25%: {oldMil} -> {DiseaseCountry.MilPower}");
         AnnounceDisease(target);
         ProcessSupport(target,player, true, true, 15, 10, -3); // 糧食15% 信賴+10 / 人力 信賴+5 / 拒絕-3
     }

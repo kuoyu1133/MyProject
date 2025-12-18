@@ -7,6 +7,10 @@ public class OccupationSystem : MonoBehaviour
     bool Assigned = false;
     public void Occupy(CountryStateManager attack, CountryStateManager defend, bool playerAssigned)
     {
+        Country defendCountry = defend.resource.countries.Find(c => c.CountryName == defend.CountryName); // 找防守國的資料
+        Country attackCountry = attack.resource.countries.Find(c => c.CountryName == defend.CountryName); // 找進攻國的資料
+
+        defendCountry.City -= 1;
         if (defend.occupation.isOccupied)
         {
             Debug.Log($"{defend.CountryName} 已被佔領，無法再次攻擊！");
@@ -22,9 +26,6 @@ public class OccupationSystem : MonoBehaviour
             // 每國獨立計算信賴值還沒處理
             attack.trust.SetTrust(attack.CountryName, 0);
             defend.trust.SetTrust(defend.CountryName, 0);
-
-            Country defendCountry = defend.resource.countries.Find(c => c.CountryName == defend.CountryName); // 找防守國的資料
-            Country attackCountry = attack.resource.countries.Find(c => c.CountryName == defend.CountryName); // 找進攻國的資料
 
             // 產量提升25%
             attackCountry.DailyIronProd += Mathf.RoundToInt(defendCountry.DailyIronProd * 0.25f);

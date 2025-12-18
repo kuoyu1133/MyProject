@@ -1,54 +1,60 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
-using static UnityEditor.Experimental.AssetDatabaseExperimental.AssetDatabaseCounters;
-
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
-    public CountryStateManager game;
+    public CountryStateManager game; // 指向資源系統的主管理中心
 
-    private void Awake() //避免該instance重複執行
+    private void Awake()
     {
         if (Instance == null)
         {
             Instance = this;
-            game = gameObject.AddComponent<CountryStateManager>();
-
-            /*foreach (var country in game.resource.countries)
-            {
-                if (country.morale == null)
-                    country.morale = gameObject.AddComponent<MoraleSystem>();
-            }*/
         }
-        else Destroy(gameObject);
+        else
+        {
+            Destroy(gameObject);
+        }
     }
+
     private void Start()
     {
-        // 初始化每個國家的信賴系統
-        foreach (var country in game.resource.countries)
+        // 初始化信賴系統
+        if (game != null && game.resource != null)
         {
-            game.trust.InitializeTrusts(game.resource.countries, country.CountryName);
-        }
-    }
-
-    public void NextDay() //判斷遊戲是否結束
-    {
-        game.DailyUpdate();
-        foreach (var country in game.resource.countries)
-        {
-            if (country.morale.IsDefeated)
+            foreach (var country in game.resource.countries)
             {
-                Debug.Log($"{country.CountryName} 因民心歸零而滅亡!");
+                game.trust.InitializeTrusts(game.resource.countries, country.CountryName);
             }
-            /*if (country.IsAIControlled)
-                country.AIUpdate();
-            else
-                country.DailyUpdate();
-
-            if (!country.IsAIControlled && country.morale.IsDefeated)
-                Debug.Log($"{country.CountryName} 因民心歸零而滅亡!");*/
         }
     }
 
+    // 由 Agent 每步執行完後呼叫
+    public void NextDay()
+    {
+        // 1. 讓 RBC 執行邏輯 (已確保 TakeTurn 內無協程)
+        RuleBasedCountry[] rbcList = FindObjectsByType<RuleBasedCountry>(FindObjectsSortMode.None);
+        foreach (var rbc in rbcList) rbc.TakeTurn();
+
+        // 2. 統一更新所有國家狀態
+        CountryStateManager[] allStates = FindObjectsByType<CountryStateManager>(FindObjectsSortMode.None);
+        foreach (var state in allStates) state.DailyUpdate();
+
+        // 3. ✅ 實時觀察兩國數據
+        LogWorldStatus();
+        Debug.Log("-------------------- 遊戲進入下一天 --------------------");
+    }
+
+    private void LogWorldStatus()
+    {
+        Country a = game.resource.countries.Find(c => c.CountryName == "Country A");
+        Country b = game.resource.countries.Find(c => c.CountryName == "Country B");
+
+        if (a != null && b != null)
+        {
+            Debug.Log($"📊 [實時統計] \n" +
+                      $"【{a.CountryName}】 城市: {a.City} | 人口: {a.Population} | 民心: {a.morale.MoraleValue} |軍力: {a.MilPower}|鐵: {a.Iron} |木頭: {a.Wood} |食物: {a.Food} |" + $"【{b.CountryName}】 城市: {b.City} | 人口: {b.Population} | 民心: {b.morale.MoraleValue} | 軍力: {b.MilPower}鐵: {b.Iron} |木頭: {b.Wood} |食物: {b.Food} | ");
+        }
+    }
 }

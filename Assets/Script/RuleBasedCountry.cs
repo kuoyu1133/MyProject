@@ -202,9 +202,76 @@ public class RuleBasedCountry : MonoBehaviour
         woodNeed = tradeSystem.GetResourceNeed(countryState, "Wood");
 
         Country myCountry = countryState.resource.countries.Find(c => c.CountryName == countryState.CountryName);
-        StartCoroutine(RunDailyRoutine());
+        //StartCoroutine(RunDailyRoutine());
     }
-    private IEnumerator RunDailyRoutine()
+    // RuleBasedCountry.cs 新增此方法
+    public void TakeTurn()
+    {
+        Country myCountry = countryState.resource.countries.Find(c => c.CountryName == countryState.CountryName);
+        if (myCountry == null || myCountry.morale.CheckDefeated(myCountry)) return;
+
+        // --- 1. 資源保命優先 (只有缺資源才交易) ---
+        // 預留至少 1-2 AP 應對緊急狀況，不再每天把 AP 用光
+        if (myCountry.AP >= 1)
+        {
+            bool needFood = myCountry.Food < 500;
+            bool needIron = myCountry.Iron < 300;
+            bool needWood = myCountry.Wood < 300;
+
+            if (needFood || needIron || needWood)
+            {
+                Trade(myCountry);
+            }
+        }
+
+        // --- 2. 只有民心低於 60 才宣傳 (節省 AP) ---
+        if (myCountry.AP >= 1 && myCountry.morale.MoraleValue < 60)
+        {
+            Announce(myCountry);
+        }
+
+        // --- 3. 政策邏輯優化 ---
+        if (myCountry.AP >= 1)
+        {
+            // 如果人口太少則生育，如果戰力太弱則徵兵
+            if (myCountry.Population < 5000)
+            {
+                policySystem.ApplyPopulationPolicy(myCountry);
+                myCountry.AP--;
+            }
+            else if (myCountry.MilPower < 100)
+            {
+                policySystem.ApplyMilitaryPolicy(myCountry);
+                myCountry.AP--;
+            }
+        }
+
+        // --- 4. 戰略性戰鬥 (這是讓 AI 活下來的關鍵) ---
+        // 修改：只有當我方戰力是對手 1.2 倍以上時才進攻，不要每天打
+        Country aiCountry = target.resource.countries.Find(c => c.CountryName == target.CountryName);
+        if (aiCountry != null && myCountry.AP >= 3)
+        {
+            if (myCountry.MilPower > aiCountry.MilPower * 1.2f)
+            {
+                // 加上 30% 隨機機率，不要每次優勢都打，給 AI 喘息機會
+                if (Random.value < 0.3f)
+                {
+                    Battle(myCountry);
+                }
+            }
+        }
+
+        // --- 5. 佔領判定 ---
+        if (myCountry.AP >= 2 && aiCountry != null)
+        {
+            // 只有在對手快崩潰時才嘗試佔領
+            if (aiCountry.morale.MoraleValue < 20 || aiCountry.Population < 1000)
+            {
+                Occupy(myCountry);
+            }
+        }
+    }
+    /*private IEnumerator RunDailyRoutine()
     {
         while (!countryState.morale.IsDefeated && !target.morale.IsDefeated)
         {
@@ -236,5 +303,5 @@ public class RuleBasedCountry : MonoBehaviour
 
             yield return new WaitForSeconds(0.5f); // 暫停 0.5 秒再下一回合（可調整）
         }
-    }
+    }*/
 }

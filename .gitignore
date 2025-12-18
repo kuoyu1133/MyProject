@@ -7,7 +7,6 @@
 MemoryCaptures/
 
 # Rider / VS / VSCode
-.vs/
 *.csproj
 *.sln
 *.user
